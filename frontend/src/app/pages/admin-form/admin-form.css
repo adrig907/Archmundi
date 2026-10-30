@@ -1,0 +1,23 @@
+.pagina-admin-form { padding: 40px 0; max-width: 480px; }
+.pagina-admin-form h1 { margin-bottom: 24px; }
+
+.formulario { display: flex; flex-direction: column; gap: 16px; }
+.formulario label { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 0.95rem; }
+.formulario input,
+.formulario select {
+  padding: 10px 12px;
+  border: 1px solid var(--color-border, #e2e2e6);
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: var(--font-body, sans-serif);
+}
+
+.modal-error {
+  border: none;
+  border-radius: 10px;
+  padding: 24px;
+  max-width: 420px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.25);
+}
+.modal-error::backdrop { background: rgba(0,0,0,0.5); }
+.modal-error p { margin: 0 0 16px; color: #b3432f; font-weight: 600; }

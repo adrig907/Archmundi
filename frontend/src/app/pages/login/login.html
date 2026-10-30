@@ -1,0 +1,21 @@
+<main class="contenedor pagina-login">
+  <h1>Acceso de administración</h1>
+
+  <form class="formulario" (ngSubmit)="login()">
+    <label>
+      Email
+      <input type="email" [(ngModel)]="email" name="email" required autofocus />
+    </label>
+
+    <label>
+      Contraseña
+      <input type="password" [(ngModel)]="password" name="password" required />
+    </label>
+
+    <p *ngIf="error" class="formulario__error">{{ error }}</p>
+
+    <button type="submit" class="boton boton--primario" [disabled]="enviando">
+      {{ enviando ? 'Entrando...' : 'Entrar' }}
+    </button>
+  </form>
+</main>

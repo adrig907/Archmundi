@@ -1,0 +1,24 @@
+<main class="pagina-listado contenedor">
+  <h1>Listado: {{ titulo }}</h1>
+
+  <p *ngIf="cargando()">Cargando...</p>
+  <p *ngIf="error()" class="estado-error">{{ error() }}</p>
+  <p *ngIf="!cargando() && !error() && entradas().length === 0">No hay entradas todavía.</p>
+
+  <div class="grid-tarjetas" *ngIf="!cargando() && entradas().length > 0">
+    <a class="tarjeta" *ngFor="let e of entradas()" [routerLink]="['/entrada', e.Id]">
+      <div class="tarjeta__imagen">
+        <img *ngIf="e.RutaMiniatura" [src]="'/uploads/' + e.RutaMiniatura" alt="" />
+        <img *ngIf="!e.RutaMiniatura && e.Tipo === 'foto' && e.RutaArchivo" [src]="'/uploads/' + e.RutaArchivo" alt="" />
+        <span *ngIf="!e.RutaMiniatura && !(e.Tipo === 'foto' && e.RutaArchivo)" class="tarjeta__icono" aria-hidden="true">
+          {{ e.Tipo === 'foto' ? '🖼️' : e.Tipo === 'video' ? '🎬' : '📄' }}
+        </span>
+      </div>
+      <div class="tarjeta__cuerpo">
+        <h3>{{ e.Nombre }}</h3>
+        <p class="tarjeta__anio">Año: {{ e.Anio }}</p>
+        <p class="tarjeta__etiquetas" *ngIf="e.Etiquetas">Etiquetas: {{ e.Etiquetas }}</p>
+      </div>
+    </a>
+  </div>
+</main>

@@ -1,0 +1,229 @@
+-- ============================================================
+-- Esquema de base de datos: Archivo digital del ayuntamiento
+-- Motor: Microsoft SQL Server (T-SQL)
+-- Uso: ejecutar completo en SQL Server Management Studio (SSMS)
+-- ============================================================
+
+-- ============================================================
+-- 0. CREACIÓN DE LA BASE DE DATOS
+-- ============================================================
+
+IF DB_ID('ArchivoMunicipal') IS NULL
+BEGIN
+    CREATE DATABASE ArchivoMunicipal;
+END
+GO
+
+USE ArchivoMunicipal;
+GO
+
+-- ============================================================
+-- 1. ADMINISTRADORES (se crea primero porque Entradas la referencia)
+-- ============================================================
+
+IF OBJECT_ID('dbo.Administradores', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Administradores (
+        Id              UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+        Email           NVARCHAR(255) NOT NULL UNIQUE,
+        PasswordHash    NVARCHAR(255) NOT NULL,        -- bcrypt/argon2, nunca texto plano
+        Nombre          NVARCHAR(255) NOT NULL,
+        Activo          BIT NOT NULL DEFAULT 1,
+        CreadoEn        DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        UltimoAcceso    DATETIME2 NULL
+    );
+END
+GO
+
+-- ============================================================
+-- 2. TABLA BASE: Entradas
+--    Equivale a la clase abstracta "Entrada".
+-- ============================================================
+
+IF OBJECT_ID('dbo.Entradas', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Entradas (
+        Id              UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+        Nombre          NVARCHAR(255) NOT NULL,
+        Anio            SMALLINT NOT NULL CHECK (Anio BETWEEN 1800 AND 2100),
+        Tipo            NVARCHAR(20) NOT NULL CHECK (Tipo IN ('foto', 'documento', 'video')),
+        Descripcion     NVARCHAR(MAX) NULL,
+        CreadoEn        DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        ActualizadoEn   DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        CreadoPor       UNIQUEIDENTIFIER NULL REFERENCES dbo.Administradores(Id)
+    );
+END
+GO
+
+-- Índices habituales de consulta pública
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Entradas_Anio' AND object_id = OBJECT_ID('dbo.Entradas'))
+BEGIN
+    CREATE INDEX IX_Entradas_Anio ON dbo.Entradas (Anio);
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Entradas_Tipo' AND object_id = OBJECT_ID('dbo.Entradas'))
+BEGIN
+    CREATE INDEX IX_Entradas_Tipo ON dbo.Entradas (Tipo);
+END
+GO
+
+-- Para búsqueda de texto por nombre, la opción nativa en SQL Server es
+-- Full-Text Search (más potente que LIKE). Requiere crear un catálogo:
+--
+-- CREATE FULLTEXT CATALOG ftCatalogArchivo AS DEFAULT;
+-- CREATE FULLTEXT INDEX ON dbo.Entradas(Nombre)
+--     KEY INDEX PK__Entradas... -- (sustituir por el nombre real de la PK)
+--     ON ftCatalogArchivo;
+--
+-- Si el volumen es modesto, un simple WHERE Nombre LIKE '%texto%'
+-- es suficiente y mucho más sencillo de mantener.
+
+-- ============================================================
+-- 3. TABLAS HIJAS: Fotos, Documentos, Videos
+--    Relación 1:1 con Entradas (herencia por tabla separada).
+-- ============================================================
+
+IF OBJECT_ID('dbo.Fotos', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Fotos (
+        EntradaId       UNIQUEIDENTIFIER PRIMARY KEY REFERENCES dbo.Entradas(Id) ON DELETE CASCADE,
+        RutaArchivo     NVARCHAR(500) NOT NULL,
+        RutaMiniatura   NVARCHAR(500) NULL,
+        AnchoPx         INT NULL,
+        AltoPx          INT NULL,
+        Formato         NVARCHAR(10) NULL,
+        PesoBytes       BIGINT NOT NULL,
+        HashSha256      CHAR(64) NULL
+    );
+END
+GO
+
+IF OBJECT_ID('dbo.Documentos', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Documentos (
+        EntradaId       UNIQUEIDENTIFIER PRIMARY KEY REFERENCES dbo.Entradas(Id) ON DELETE CASCADE,
+        RutaArchivo     NVARCHAR(500) NOT NULL,
+        RutaMiniatura   NVARCHAR(500) NULL,
+        NumPaginas      INT NULL,
+        Formato         NVARCHAR(10) NULL,
+        PesoBytes       BIGINT NOT NULL,
+        HashSha256      CHAR(64) NULL
+    );
+END
+GO
+
+IF OBJECT_ID('dbo.Videos', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Videos (
+        EntradaId       UNIQUEIDENTIFIER PRIMARY KEY REFERENCES dbo.Entradas(Id) ON DELETE CASCADE,
+        RutaArchivo     NVARCHAR(500) NOT NULL,
+        RutaMiniatura   NVARCHAR(500) NULL,
+        DuracionSeg     INT NULL,
+        AnchoPx         INT NULL,
+        AltoPx          INT NULL,
+        Formato         NVARCHAR(10) NULL,
+        PesoBytes       BIGINT NOT NULL,
+        HashSha256      CHAR(64) NULL
+    );
+END
+GO
+
+-- ============================================================
+-- 4. ETIQUETAS (relación muchos-a-muchos con Entradas)
+-- ============================================================
+
+IF OBJECT_ID('dbo.Etiquetas', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Etiquetas (
+        Id      UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+        Nombre  NVARCHAR(100) NOT NULL UNIQUE
+    );
+END
+GO
+
+IF OBJECT_ID('dbo.EntradaEtiqueta', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.EntradaEtiqueta (
+        EntradaId   UNIQUEIDENTIFIER NOT NULL REFERENCES dbo.Entradas(Id) ON DELETE CASCADE,
+        EtiquetaId  UNIQUEIDENTIFIER NOT NULL REFERENCES dbo.Etiquetas(Id) ON DELETE CASCADE,
+        PRIMARY KEY (EntradaId, EtiquetaId)
+    );
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_EntradaEtiqueta_Etiqueta' AND object_id = OBJECT_ID('dbo.EntradaEtiqueta'))
+BEGIN
+    CREATE INDEX IX_EntradaEtiqueta_Etiqueta ON dbo.EntradaEtiqueta (EtiquetaId);
+END
+GO
+
+-- ============================================================
+-- 5. TRIGGER para mantener ActualizadoEn al día
+--    SQL Server no tiene triggers BEFORE, solo AFTER/INSTEAD OF.
+-- ============================================================
+
+CREATE OR ALTER TRIGGER trg_Entradas_ActualizadoEn
+ON dbo.Entradas
+AFTER UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE e
+    SET ActualizadoEn = SYSUTCDATETIME()
+    FROM dbo.Entradas e
+    INNER JOIN inserted i ON e.Id = i.Id;
+END
+GO
+
+-- ============================================================
+-- 6. VISTA DE CONSULTA UNIFICADA
+--    Útil para el endpoint público GET /entradas.
+--    STRING_AGG sustituye a array_agg (no hay arrays nativos en T-SQL,
+--    las etiquetas llegan como texto separado por comas).
+-- ============================================================
+
+CREATE OR ALTER VIEW dbo.VistaEntradas AS
+SELECT
+    e.Id,
+    e.Nombre,
+    e.Anio,
+    e.Tipo,
+    e.Descripcion,
+    e.CreadoEn,
+    COALESCE(f.RutaMiniatura, d.RutaMiniatura, v.RutaMiniatura) AS RutaMiniatura,
+    COALESCE(f.PesoBytes, d.PesoBytes, v.PesoBytes) AS PesoBytes,
+    STRING_AGG(et.Nombre, ', ') AS Etiquetas
+FROM dbo.Entradas e
+LEFT JOIN dbo.Fotos f              ON f.EntradaId = e.Id
+LEFT JOIN dbo.Documentos d         ON d.EntradaId = e.Id
+LEFT JOIN dbo.Videos v             ON v.EntradaId = e.Id
+LEFT JOIN dbo.EntradaEtiqueta ee   ON ee.EntradaId = e.Id
+LEFT JOIN dbo.Etiquetas et         ON et.Id = ee.EtiquetaId
+GROUP BY e.Id, e.Nombre, e.Anio, e.Tipo, e.Descripcion, e.CreadoEn,
+         f.RutaMiniatura, d.RutaMiniatura, v.RutaMiniatura,
+         f.PesoBytes, d.PesoBytes, v.PesoBytes;
+GO
+
+-- ============================================================
+-- 7. EJEMPLOS DE CONSULTA Y USO
+-- ============================================================
+
+-- Listar entradas de un año con una etiqueta concreta:
+-- SELECT * FROM dbo.VistaEntradas
+-- WHERE Anio = 1985 AND Etiquetas LIKE '%fiestas%';
+
+-- Insertar una foto nueva (transacción típica desde el backend):
+/*
+BEGIN TRANSACTION;
+
+DECLARE @NuevoId UNIQUEIDENTIFIER = NEWID();
+
+INSERT INTO dbo.Entradas (Id, Nombre, Anio, Tipo, CreadoPor)
+VALUES (@NuevoId, 'Procesión mayor', 1978, 'foto', '<uuid-admin>');
+
+INSERT INTO dbo.Fotos (EntradaId, RutaArchivo, AnchoPx, AltoPx, Formato, PesoBytes, HashSha256)
+VALUES (@NuevoId, 'fotos/1978/uuid-generado.jpg', 1920, 1080, 'jpg', 2456789, '...');
+
+COMMIT TRANSACTION;
+*/

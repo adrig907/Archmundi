@@ -1,0 +1,38 @@
+:root {
+  --color-header: #21232a;
+  --color-page-bg: #ffffff;
+  --color-accent-blue: #3d6291;
+  --color-accent-blue-hover: #345278;
+  --color-accent-gold: #e3a83c;
+  --color-text: #17181c;
+  --color-text-muted: #5a5c66;
+  --color-text-on-dark: #f2f0e8;
+  --color-border: #e2e2e6;
+
+  --font-display: 'Nunito', sans-serif;
+  --font-body: 'Source Sans 3', sans-serif;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background: var(--color-page-bg);
+  color: var(--color-text);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  margin: 0;
+}
+
+.visualmente-oculto {
+  position: absolute; width: 1px; height: 1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+.contenedor {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 24px;
+}

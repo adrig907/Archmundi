@@ -1,0 +1,26 @@
+.pagina-home { padding: 64px 24px; min-height: 60vh; }
+
+.home-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 240px));
+  gap: 24px 40px;
+  justify-content: center;
+  max-width: 900px;
+  margin: 40px auto 0;
+}
+
+.boton-grande {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 88px;
+  background: #3d6291;
+  color: #e3a83c;
+  font-family: 'Nunito', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.boton-grande:hover { background: #345278; transform: translateY(-2px); }

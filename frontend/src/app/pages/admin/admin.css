@@ -1,0 +1,117 @@
+.boton-tabla {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border, #e2e2e6);
+  background: #f4f4f6;
+  color: var(--color-text, #17181c);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+.boton-tabla:hover { background: #e8e8ec; }
+
+.boton-tabla--peligro {
+  background: none;
+  border-color: #e3b3a8;
+  color: #b3432f;
+}
+.boton-tabla--peligro:hover { background: #fbeceA; }
+.boton-tabla--peligro:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  font-family: var(--font-body, sans-serif);
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  line-height: 1.2;
+  transition: background 0.15s ease;
+}
+
+.boton--neutro {
+  background: #f4f4f6;
+  color: var(--color-text, #17181c);
+  border-color: var(--color-border, #e2e2e6);
+}
+.boton--neutro:hover { background: #e8e8ec; }
+
+.boton--primario {
+  background: var(--color-accent-blue, #3d6291);
+  color: #ffffff;
+  border-color: var(--color-accent-blue, #3d6291);
+  margin-right: 8px;
+}
+.boton--primario:hover { background: var(--color-accent-blue-hover, #345278); }
+
+.boton--peligro {
+  background: #ffffff;
+  color: #b3432f;
+  border-color: #e3b3a8;
+}
+.boton--peligro:hover { background: #fbecea; }
+
+.boton:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.tabla-admin {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 16px;
+  border: 1px solid var(--color-border, #e2e2e6);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.tabla-admin th,
+.tabla-admin td {
+  text-align: left;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border, #e2e2e6);
+}
+
+.tabla-admin th {
+  background: #f4f4f6;
+  font-family: var(--font-display, sans-serif);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-muted, #5a5c66);
+}
+
+.tabla-admin tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.tabla-admin tbody tr:hover {
+  background: #fafafa;
+}
+
+.tabla-admin__acciones {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.th-ordenable {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+}
+.th-ordenable:hover { color: var(--color-text, #17181c); }

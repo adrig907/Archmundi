@@ -1,0 +1,50 @@
+<main class="contenedor pagina-admin">
+ <div class="pagina-admin__cabecera">
+    <div>
+      <h1>Panel de administración</h1>
+    </div>
+    <div class="pagina-admin__acciones">
+      <a routerLink="/admin/nueva" class="boton boton--primario">+ Añadir entrada</a>
+      <a routerLink="/admin/etiquetas" class="boton boton--primario">Gestionar etiquetas</a>
+    </div>
+</div>
+
+  <p *ngIf="cargando()">Cargando...</p>
+
+  <table class="tabla-admin" *ngIf="!cargando()">
+    <thead>
+  <tr>
+    <th>Nombre</th>
+      <th>
+        <button type="button" class="th-ordenable" (click)="ordenar('Tipo')">
+          Tipo
+          <span *ngIf="ordenarPor() === 'Tipo'">{{ direccion() === 'asc' ? '▲' : '▼' }}</span>
+        </button>
+      </th>
+      <th>
+        <button type="button" class="th-ordenable" (click)="ordenar('Anio')">
+          Año
+          <span *ngIf="ordenarPor() === 'Anio'">{{ direccion() === 'asc' ? '▲' : '▼' }}</span>
+        </button>
+      </th>
+      <th>Etiquetas</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr *ngFor="let e of entradasOrdenadas()">
+        <td>{{ e.Nombre }}</td>
+        <td>{{ e.Tipo }}</td>
+        <td>{{ e.Anio }}</td>
+        <td>{{ e.Etiquetas || '—' }}</td>
+        <td class="tabla-admin__acciones">
+          <a [routerLink]="['/entrada', e.Id]" class="boton-tabla">Ver</a>
+          <a [routerLink]="['/admin/editar', e.Id]" class="boton-tabla">Editar</a>
+          <button type="button" (click)="borrar(e.Id, e.Nombre)" [disabled]="borrandoId() === e.Id" class="boton-tabla boton-tabla--peligro">
+            {{ borrandoId() === e.Id ? 'Eliminando...' : 'Eliminar' }}
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</main>

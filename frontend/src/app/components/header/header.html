@@ -1,0 +1,35 @@
+<header class="cabecera">
+  <div class="cabecera__fila-superior contenedor">
+    <nav class="cabecera__nav-superior" aria-label="Navegación secundaria">
+      <a href="#contenido">Accesibilidad</a>
+      <a routerLink="/contacto">Contacto</a>
+      <span class="cabecera__idiomas">
+        <button type="button">ES</button>
+        <button type="button">VA</button>
+      </span>
+      <a *ngIf="!auth.admin()" routerLink="/login" class="cabecera__admin-link">Acceso administración</a>
+        <ng-container *ngIf="auth.admin() as a">
+          <a routerLink="/admin" class="cabecera__admin-link">Panel · {{ a.nombre }}</a>
+          <button type="button" (click)="logout()" class="cabecera__admin-link cabecera__logout">Cerrar sesión</button>
+        </ng-container>
+    </nav>
+  </div>
+
+    <div class="cabecera__fila-principal contenedor">
+        <a routerLink="/" class="cabecera__logo" aria-label="Ir al inicio">
+            <img src=".svg" alt="Escudo del ayuntamiento" class="cabecera__logo-img" />
+        </a>
+
+    <form class="cabecera__busqueda" role="search" (ngSubmit)="buscar()">
+      <label for="busqueda-global" class="visualmente-oculto">Buscar en el archivo</label>
+      <input
+        id="busqueda-global"
+        type="search"
+        placeholder="¿En qué podemos ayudarte?..."
+        [(ngModel)]="busqueda"
+        name="busqueda"
+      />
+      <button type="submit" aria-label="Buscar">🔍</button>
+    </form>
+  </div>
+</header>

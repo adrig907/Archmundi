@@ -1,0 +1,141 @@
+-- ============================================================
+-- Script de PRUEBAS del esquema ArchivoMunicipal
+-- Ejecutar por bloques (seleccionando cada sección) para ver
+-- el resultado de cada prueba por separado, en vez de todo junto.
+-- ============================================================
+
+USE ArchivoMunicipal;
+GO
+
+-- ============================================================
+-- PRUEBA 0: Verificar que los objetos existen
+-- ============================================================
+
+SELECT name AS Tabla FROM sys.tables ORDER BY name;
+-- Deberías ver: Administradores, Documentos, EntradaEtiqueta,
+--               Entradas, Etiquetas, Fotos, Videos
+
+SELECT name AS Vista FROM sys.views;
+-- Deberías ver: VistaEntradas
+
+SELECT name AS [Trigger] FROM sys.triggers;
+-- Deberías ver: trg_Entradas_ActualizadoEn
+
+
+-- ============================================================
+-- PRUEBA 1: Insertar un administrador y las 3 entradas de ejemplo
+--           (una foto, un documento y un vídeo)
+-- ============================================================
+
+DECLARE @AdminId UNIQUEIDENTIFIER = NEWID();
+DECLARE @IdFoto UNIQUEIDENTIFIER = NEWID();
+DECLARE @IdDoc UNIQUEIDENTIFIER = NEWID();
+DECLARE @IdVideo UNIQUEIDENTIFIER = NEWID();
+DECLARE @EtFiestas UNIQUEIDENTIFIER = NEWID();
+DECLARE @EtHistorico UNIQUEIDENTIFIER = NEWID();
+
+BEGIN TRANSACTION;
+
+INSERT INTO dbo.Administradores (Id, Email, PasswordHash, Nombre)
+VALUES (@AdminId, 'admin@ayuntamiento.test', 'hash_de_prueba', 'Admin Prueba');
+
+INSERT INTO dbo.Entradas (Id, Nombre, Anio, Tipo, CreadoPor)
+VALUES
+    (@IdFoto,  'Procesión mayor 1978', 1978, 'foto', @AdminId),
+    (@IdDoc,   'Acta municipal 1952',  1952, 'documento', @AdminId),
+    (@IdVideo, 'Fiestas patronales 1999', 1999, 'video', @AdminId);
+
+INSERT INTO dbo.Fotos (EntradaId, RutaArchivo, AnchoPx, AltoPx, Formato, PesoBytes)
+VALUES (@IdFoto, 'fotos/1978/procesion.jpg', 1920, 1080, 'jpg', 2456789);
+
+INSERT INTO dbo.Documentos (EntradaId, RutaArchivo, NumPaginas, Formato, PesoBytes)
+VALUES (@IdDoc, 'documentos/1952/acta.pdf', 4, 'pdf', 512340);
+
+INSERT INTO dbo.Videos (EntradaId, RutaArchivo, DuracionSeg, Formato, PesoBytes)
+VALUES (@IdVideo, 'videos/1999/fiestas.mp4', 180, 'mp4', 98765432);
+
+INSERT INTO dbo.Etiquetas (Id, Nombre) VALUES (@EtFiestas, 'fiestas'), (@EtHistorico, 'historico');
+
+INSERT INTO dbo.EntradaEtiqueta (EntradaId, EtiquetaId) VALUES
+    (@IdFoto, @EtFiestas), (@IdFoto, @EtHistorico),
+    (@IdVideo, @EtFiestas);
+
+COMMIT TRANSACTION;
+
+PRINT 'Prueba 1 OK: datos de ejemplo insertados';
+
+
+-- ============================================================
+-- PRUEBA 2: Consultar la vista unificada
+--           Debe mostrar las 3 entradas con sus etiquetas juntas
+-- ============================================================
+
+SELECT * FROM dbo.VistaEntradas ORDER BY Anio;
+
+-- Filtrar como lo haría el endpoint público:
+SELECT * FROM dbo.VistaEntradas WHERE Etiquetas LIKE '%fiestas%';
+
+
+-- ============================================================
+-- PRUEBA 3: Comprobar que el trigger actualiza ActualizadoEn
+-- ============================================================
+
+SELECT Id, Nombre, CreadoEn, ActualizadoEn
+FROM dbo.Entradas
+WHERE Nombre = 'Procesión mayor 1978';
+-- Anota la hora de ActualizadoEn antes del UPDATE
+
+WAITFOR DELAY '00:00:02'; -- pequeña espera para que se note el cambio
+
+UPDATE dbo.Entradas SET Descripcion = 'Descripción añadida en prueba'
+WHERE Nombre = 'Procesión mayor 1978';
+
+SELECT Id, Nombre, CreadoEn, ActualizadoEn
+FROM dbo.Entradas
+WHERE Nombre = 'Procesión mayor 1978';
+-- ActualizadoEn debe ser más reciente que CreadoEn y que el valor anterior
+
+
+-- ============================================================
+-- PRUEBA 4: Comprobar las restricciones CHECK
+--           Estas dos sentencias DEBEN fallar (es el comportamiento correcto)
+-- ============================================================
+
+-- Debe fallar: tipo no permitido
+-- INSERT INTO dbo.Entradas (Nombre, Anio, Tipo) VALUES ('Prueba mala', 2000, 'audio');
+
+-- Debe fallar: año fuera de rango
+-- INSERT INTO dbo.Entradas (Nombre, Anio, Tipo) VALUES ('Prueba mala', 1500, 'foto');
+
+-- (Descomenta una línea cada vez y ejecútala para confirmar que SQL Server la rechaza)
+
+
+-- ============================================================
+-- PRUEBA 5: Comprobar el borrado en cascada
+--           Al borrar una entrada, deben desaparecer también su
+--           registro hijo (Fotos/Documentos/Videos) y sus etiquetas
+-- ============================================================
+
+DECLARE @IdBorrar UNIQUEIDENTIFIER;
+SELECT @IdBorrar = Id FROM dbo.Entradas WHERE Nombre = 'Acta municipal 1952';
+
+DELETE FROM dbo.Entradas WHERE Id = @IdBorrar;
+
+-- Estas dos consultas deben devolver 0 filas si la cascada funcionó:
+SELECT * FROM dbo.Documentos WHERE EntradaId = @IdBorrar;
+SELECT * FROM dbo.EntradaEtiqueta WHERE EntradaId = @IdBorrar;
+
+PRINT 'Prueba 5 OK si las dos consultas anteriores no devuelven filas';
+
+
+-- ============================================================
+-- LIMPIEZA (opcional): borrar todos los datos de prueba
+-- ============================================================
+
+-- DELETE FROM dbo.EntradaEtiqueta;
+-- DELETE FROM dbo.Fotos;
+-- DELETE FROM dbo.Documentos;
+-- DELETE FROM dbo.Videos;
+-- DELETE FROM dbo.Entradas;
+-- DELETE FROM dbo.Etiquetas;
+-- DELETE FROM dbo.Administradores;

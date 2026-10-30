@@ -1,0 +1,37 @@
+.pagina-admin-etiquetas { padding: 40px 0; }
+.estado-error { color: #b3432f; font-weight: 600; }
+
+.form-nueva-categoria {
+  display: flex;
+  gap: 10px;
+  margin: 20px 0 32px;
+  max-width: 480px;
+}
+.form-nueva-categoria input,
+.form-nueva-subcategoria input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border, #e2e2e6);
+  border-radius: 6px;
+}
+
+.categoria {
+  border: 1px solid var(--color-border, #e2e2e6);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.categoria__cabecera { display: flex; justify-content: space-between; align-items: center; }
+.categoria__cabecera h2 { font-size: 1.3rem; }
+
+.lista-subcategorias { list-style: none; padding: 0; margin: 16px 0; }
+.lista-subcategorias li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f2;
+}
+.lista-subcategorias li:last-child { border-bottom: none; }
+
+.form-nueva-subcategoria { display: flex; gap: 8px; margin-top: 12px; }

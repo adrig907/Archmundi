@@ -1,0 +1,60 @@
+<main class="contenedor pagina-admin-form">
+  <h1>{{ esEdicion ? 'Editar entrada' : 'Nueva entrada' }}</h1>
+
+  <p *ngIf="cargando()">Cargando...</p>
+
+  <form class="formulario" *ngIf="!cargando()" (ngSubmit)="guardar()">
+    <label>
+      Nombre
+      <input [(ngModel)]="nombre" name="nombre" required />
+    </label>
+
+    <label>
+      Año
+      <input type="number" [(ngModel)]="anio" name="anio" min="1800" max="2100" required />
+    </label>
+
+    <label *ngIf="!esEdicion">
+      Tipo
+      <select [(ngModel)]="tipo" name="tipo">
+        <option value="foto">Foto</option>
+        <option value="documento">Documento</option>
+        <option value="video">Vídeo</option>
+      </select>
+    </label>
+
+   <label>
+      Etiquetas
+      <select multiple size="8" (change)="actualizarSeleccion($event)">
+        <ng-container *ngFor="let cat of arbol()">
+          <optgroup *ngIf="cat.subcategorias && cat.subcategorias.length > 0" [label]="cat.Nombre">
+            <option [value]="cat.Nombre" [selected]="etiquetasSeleccionadas().includes(cat.Nombre)">
+              {{ cat.Nombre }} (toda la categoría)
+            </option>
+            <option *ngFor="let sub of cat.subcategorias" [value]="sub.Nombre" [selected]="etiquetasSeleccionadas().includes(sub.Nombre)">
+              {{ sub.Nombre }}
+            </option>
+          </optgroup>
+          <option *ngIf="!cat.subcategorias || cat.subcategorias.length === 0" [value]="cat.Nombre" [selected]="etiquetasSeleccionadas().includes(cat.Nombre)">
+            {{ cat.Nombre }}
+          </option>
+        </ng-container>
+      </select>
+      <small>Mantén pulsada Ctrl (o Cmd en Mac) para elegir varias</small>
+    </label>
+
+    <label>
+      {{ esEdicion ? 'Sustituir archivo (opcional)' : 'Archivo' }}
+      <input type="file" (change)="seleccionarArchivo($event)" [required]="!esEdicion" />
+    </label>
+
+    <button type="submit" class="boton boton--primario" [disabled]="enviando()">
+      {{ enviando() ? 'Guardando...' : 'Guardar' }}
+    </button>
+  </form>
+
+  <dialog #dialogoError class="modal-error">
+    <p>{{ error() }}</p>
+    <button type="button" (click)="cerrarModal()" class="boton boton--neutro">Entendido</button>
+  </dialog>
+</main>

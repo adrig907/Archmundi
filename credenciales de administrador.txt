@@ -1,0 +1,3 @@
+Email del administrador: admin@admin.com
+Nombre completo: administrador D. prueba
+Contraseña: admin

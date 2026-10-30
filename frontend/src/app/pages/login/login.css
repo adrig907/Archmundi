@@ -1,0 +1,13 @@
+.pagina-login { padding: 40px 0; max-width: 420px; }
+.pagina-login h1 { margin-bottom: 24px; }
+
+.formulario { display: flex; flex-direction: column; gap: 16px; }
+.formulario label { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 0.95rem; }
+.formulario input {
+  padding: 10px 12px;
+  border: 1px solid var(--color-border, #e2e2e6);
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: var(--font-body, sans-serif);
+}
+.formulario__error { color: #b3432f; font-weight: 600; }

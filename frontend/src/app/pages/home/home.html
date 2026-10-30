@@ -1,0 +1,8 @@
+<main class="pagina-home">
+  <h1 class="visualmente-oculto">Archivo digital del ayuntamiento</h1>
+  <div class="home-grid">
+    <a *ngFor="let op of opciones" [routerLink]="op.ruta" class="boton-grande">
+      {{ op.etiqueta }}
+    </a>
+  </div>
+</main>

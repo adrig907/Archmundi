@@ -1,0 +1,42 @@
+<main class="contenedor pagina-admin-etiquetas">
+  <h1>Gestión de etiquetas</h1>
+  <p *ngIf="error()" class="estado-error">{{ error() }}</p>
+
+  <form class="form-nueva-categoria" (ngSubmit)="crearCategoria()">
+    <input
+    [ngModel]="nombreCategoria"
+    (ngModelChange)="nombreCategoria = $event.toLowerCase()"
+    name="nombreCategoria"
+    placeholder="Nueva categoría (ej. iglesia)"
+    />
+    <button type="submit" class="boton-primario">Añadir categoría</button>
+  </form>
+
+  <p *ngIf="cargando()">Cargando...</p>
+
+  <div class="lista-categorias" *ngIf="!cargando()">
+    <div class="categoria" *ngFor="let cat of arbol()">
+      <div class="categoria__cabecera">
+        <h2>{{ cat.Nombre }}</h2>
+        <button type="button" class="boton-tabla boton-tabla--peligro" (click)="borrar(cat.Id, cat.Nombre)">Eliminar</button>
+      </div>
+
+      <ul class="lista-subcategorias">
+        <li *ngFor="let sub of cat.subcategorias">
+          <span>{{ sub.Nombre }}</span>
+          <button type="button" class="boton-tabla boton-tabla--peligro" (click)="borrar(sub.Id, sub.Nombre)">Eliminar</button>
+        </li>
+      </ul>
+
+      <form class="form-nueva-subcategoria" (ngSubmit)="crearSubcategoria(cat.Id)">
+       <input
+        [ngModel]="nombreSubcategoria[cat.Id]"
+        (ngModelChange)="nombreSubcategoria[cat.Id] = $event.toLowerCase()"
+        [name]="'sub-' + cat.Id"
+        placeholder="Nueva subcategoría"
+        />
+        <button type="submit" class="boton-secundario">+ Añadir</button>
+      </form>
+    </div>
+  </div>
+</main>

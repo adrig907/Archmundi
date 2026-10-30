@@ -1,0 +1,36 @@
+<main class="pagina-detalle contenedor" *ngIf="!cargando()">
+  <p *ngIf="error()" class="estado-error">{{ error() }}</p>
+
+  <div class="pagina-detalle__grid" *ngIf="entrada() as e">
+    <div class="pagina-detalle__visor">
+      <img *ngIf="e.Tipo === 'foto' && e.detalle" [src]="'/uploads/' + e.detalle.RutaArchivo" [alt]="e.Nombre" />
+      <video *ngIf="e.Tipo === 'video' && e.detalle" controls [src]="'/uploads/' + e.detalle.RutaArchivo"></video>
+      <span *ngIf="e.Tipo === 'documento'" class="pagina-detalle__icono" aria-hidden="true">📄</span>
+    </div>
+
+    <div class="pagina-detalle__info">
+      <h1>{{ e.Nombre }}</h1>
+
+      <div class="pagina-detalle__descarga" *ngIf="e.detalle">
+        <span>Descarga:</span>
+        <a [href]="'/uploads/' + e.detalle.RutaArchivo" download class="pagina-detalle__boton-descarga">
+          {{ e.detalle.Formato?.toUpperCase() }}
+        </a>
+      </div>
+
+      <dl class="pagina-detalle__metadatos">
+        <dt>Año</dt>
+        <dd>{{ e.Anio }}</dd>
+        <ng-container *ngIf="e.etiquetas.length > 0">
+          <dt>Etiquetas</dt>
+          <dd>{{ e.etiquetas.join(', ') }}</dd>
+        </ng-container>
+      </dl>
+
+      <p *ngIf="e.Descripcion" class="pagina-detalle__descripcion">{{ e.Descripcion }}</p>
+
+      <a routerLink="/" class="enlace-volver">← Volver al inicio</a>
+    </div>
+  </div>
+</main>
+<p *ngIf="cargando()" class="contenedor">Cargando...</p>

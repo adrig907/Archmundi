@@ -1,0 +1,2 @@
+- Si lo hago yo: enviar correo cau@dipcas.es para la consulta de la web
+- Si lo van a hacer desde el ayuntamiento: entrar a asistencia.dipcas.es seleccionar proyecto de portal web municipal (es la misma cuenta que la del correo) y dar a "Crear informe"
